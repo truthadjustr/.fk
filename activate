@@ -1,0 +1,80 @@
+
+# bootstrap
+export FKLOGDIR=/tmp/fk
+mkdir -p $FKLOGDIR
+
+fk_init() {
+    mkdir -p ~/.fk/ 
+    cd ~/.fk/
+    [ ! -e shell-functools/ ] && \
+        git clone ssh://git@github.com/truthadjustr/shell-functools.git
+    MUSTHAVES='jq xmlstarlet'
+    for x in $MUSTHAVES;do 
+        if ! type $x >/dev/null 2>&1;then
+            echo "missing $x"
+        fi
+    done
+}
+
+fk_enablef() {
+    [ -d ~/.fk/shell-functools/ft ] && \
+        export PATH=~/.fk/shell-functools/ft:$PATH || \
+        echo "fail"
+}
+
+# elasticsearch 
+fk_es_cat() {
+    [ $# -eq 0 ] && return 0
+    if [ -n "$a" ];then
+python3 - <<END
+import sys
+sys.path.append('/home/vm-user/.fk/')
+import es_funcs
+es_funcs.get_indices()
+END
+    else
+        ES=$1
+        curl -s "http://$ES:9200/_cat/indices?v&pretty" | tee $FKLOGDIR/es_cat.$ES.$(date +'%H')
+    fi
+}
+
+fk_es_search() {
+    [ $# -ne 2 ] && return 0
+    if [ -n "$a" ];then
+python3 - <<END
+import sys
+sys.path.append('/home/vm-user/.fk/')
+import es_funcs
+es_funcs.get_docs("$INDEX")
+END
+    else
+        ES=$1
+        INDEX=$2
+        curl -s "http://$ES:9200/$INDEX/_search?pretty" | tee $FKLOGDIR/es_search.$INDEX.$(date +'%H')
+    fi
+}
+
+fk_es_delete() {
+    [ $# -ne 2 ] && return 0
+    ES=$1
+    INDEX=$2
+    curl -s -XDELETE "http://$ES:9200/$INDEX"
+}
+
+fk_es_json_vi() {
+    [ $# -eq 0 ] && return 1
+    local auto=0
+    local n=$(jq '.hits.hits|length' $1)
+    for((i=0;i<n;i++));do
+        jq ".hits.hits[$i]" $1 
+        echo "------"
+        if ((auto == 0));then
+            read -p "next? [Y/n/a]" yesno
+            [ "$yesno" = "n" ] && break 
+        fi
+        if [ "$yesno" = "a" ];then
+            auto=1
+            sleep 3
+        fi
+    done
+}

@@ -8,6 +8,7 @@ fk_init() {
     cd ~/.fk/
     [ ! -e shell-functools/ ] && \
         git clone ssh://git@github.com/truthadjustr/shell-functools.git
+    cd -
     MUSTHAVES='jq xmlstarlet'
     for x in $MUSTHAVES;do 
         if ! type $x >/dev/null 2>&1;then
@@ -17,9 +18,12 @@ fk_init() {
 }
 
 fk_enablef() {
-    [ -d ~/.fk/shell-functools/ft ] && \
-        export PATH=~/.fk/shell-functools/ft:$PATH || \
-        echo "fail"
+    if [ ! -d ~/.fk/shell-functools/ft ];then
+      cd ~/.fk/
+      git clone ssh://git@github.com/truthadjustr/shell-functools.git
+      cd -
+    fi 
+    export PATH=~/.fk/shell-functools/ft:$PATH 
 }
 
 # elasticsearch 

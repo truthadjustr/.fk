@@ -31,8 +31,8 @@ fk_es_cat() {
     [ $# -eq 0 ] && return 0
     if [ -n "$a" ];then
 python3 - <<END
-import sys
-sys.path.append('/home/vm-user/.fk/')
+import os,sys
+sys.path.append(os.getenv('HOME') + '/.fk/')
 import es_funcs
 es_funcs.get_indices()
 END
@@ -46,8 +46,8 @@ fk_es_search() {
     [ $# -ne 2 ] && return 0
     if [ -n "$a" ];then
 python3 - <<END
-import sys
-sys.path.append('/home/vm-user/.fk/')
+import os,sys
+sys.path.append(os.getenv('HOME') + '/.fk/')
 import es_funcs
 es_funcs.get_docs("$INDEX")
 END

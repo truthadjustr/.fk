@@ -29,31 +29,31 @@ fk_enablef() {
 # elasticsearch 
 fk_es_cat() {
     [ $# -eq 0 ] && return 0
+    ES=$1
     if [ -n "$a" ];then
 python3 - <<END
 import os,sys
 sys.path.append(os.getenv('HOME') + '/.fk/')
 import es_funcs
-es_funcs.get_indices()
+es_funcs.get_indices(host="$ES")
 END
     else
-        ES=$1
         curl -s "http://$ES:9200/_cat/indices?v&pretty" | tee $FKLOGDIR/es_cat.$ES.$(date +'%H')
     fi
 }
 
 fk_es_search() {
     [ $# -ne 2 ] && return 0
+    ES=$1
+    INDEX=$2
     if [ -n "$a" ];then
 python3 - <<END
 import os,sys
 sys.path.append(os.getenv('HOME') + '/.fk/')
 import es_funcs
-es_funcs.get_docs("$INDEX")
+es_funcs.get_docs("$INDEX",host = $ES)
 END
     else
-        ES=$1
-        INDEX=$2
         curl -s "http://$ES:9200/$INDEX/_search?pretty" | tee $FKLOGDIR/es_search.$INDEX.$(date +'%H')
     fi
 }

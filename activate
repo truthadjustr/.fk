@@ -99,7 +99,7 @@ feel () {
     local TARGET=${1:-.}
     declare -A usecount
     local APIS=($(<~/.fk/winapi.lst))
-    local api c f
+    local api c f idx
 
     if [ -d $TARGET ];then
         find $TARGET \( -name '*.git*' -o -name '*node_modules*' \) -prune -o -type f -exec basename {} \; | while read x; do
@@ -128,10 +128,67 @@ feel () {
         done
     fi
 
+    idx=0
     for api in ${!usecount[@]}
     do
-        echo "$api = ${usecount[$api]}" 
+        #idx=$((idx+1))
+        #((idx%5 == 0)) && sep='\n' || sep=', '
+        #str="$api = ${usecount[$api]}"
+        #printf "$str%b" $sep 
+        printf "$api = ${usecount[$api]}\n"
     done | tee -a /tmp/feel.out
+}
+
+cpp_i() {
+    [ $# -eq 0 ] && return 1
+    local F=$1
+    #ctags -x --c++-kinds=f --language-force=c++ $F
+    grep -n -o -E '[[:alpha:]]+[[:alnum:]]*[[:space:]]*::[[:space:]]*[[:alpha:]]+[[:alnum:]]*[[:space:]]*\(' $F
+}
+
+crossref() {
+	local TARGET=${1:-.}
+	local tmpFile=$(mktemp)
+	cd $TARGET
+	find . -type f \
+        -a \( -name "*.h" -o -name "*.cpp" -o -name "*.c" -o -name "*.cc" -o -name "*.pc" \) > $tmpFile
+
+	rm -f cscope.* tags
+	ctags -I "__THROW __nonnull __attribute_pure__ __attribute__ G_GNUC_PRINTF+" \
+        --file-scope=yes --c++-kinds=+px --c-kinds=+px --fields=+iaS -Ra --extra=+fq \
+        --langmap=c:.c.h.pc.ec --languages=c,c++ --links=yes -f tags -L $tmpFile
+
+	cscope -Rb -i $tmpFile
+	cd -
+	rm -f $tmpFile
+}
+
+see() {
+    if [ $# -ne 2 ];then
+        echo "see file.cpp c|d|e|f|g|l|m|n|p|s|t|u|v|x"
+		echo "where:"
+		cat<<HEREDOC	
+c  classes
+d  macro definitions
+e  enumerators (values inside an enumeration)
+f  function definitions
+g  enumeration names
+l  local variables [off]
+m  class, struct, and union members
+n  namespaces
+p  function prototypes [off]
+s  structure names
+t  typedefs
+u  union names
+v  variable definitions
+x external and forward variable declarations [off]
+HEREDOC
+        return 0
+    fi
+    local F=$1
+    local G=$2
+    ctags -x --c++-kinds=$G --language-force=c++ --extra=q $F \
+        | sort | awk '!seen[$3]++'
 }
 
 ###########

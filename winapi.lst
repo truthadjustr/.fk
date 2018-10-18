@@ -43,3 +43,5 @@ CreateFile
 GetFileSize
 ReadFile
 QueryInterface
+_beginthreadex
+_tWinMain

@@ -29,3 +29,17 @@ MultiByteToWideChar
 GetTickCount
 InitializeCriticalSection
 DeleteCriticalSection
+CreateDirectory
+FindFirstFile
+DeleteFile
+MoveFile
+SetCurrentDirectory
+RemoveDirectory
+GetLocalTime
+WinMain
+DllMain
+GetModuleFileName
+CreateFile
+GetFileSize
+ReadFile
+QueryInterface

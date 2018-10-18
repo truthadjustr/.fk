@@ -96,29 +96,42 @@ fk_es_json_vi() {
 
 # A function to feel the use of certain Windows APIs
 feel () { 
-    local DIR=${1:-.}
-    find $DIR \( -name '*.git*' -o -name '*node_modules*' \) -prune -o -type f -exec basename {} \; | while read x; do
-        echo ${x##*.}
-    done | sort | uniq -ic | sort -rn
-    echo "-----------------------------------------";
-    echo */
-    echo "-----------------------------------------";
+    local TARGET=${1:-.}
     declare -A usecount
     local APIS=($(<~/.fk/winapi.lst))
     local api c f
-    while read f; do
+
+    if [ -d $TARGET ];then
+        find $TARGET \( -name '*.git*' -o -name '*node_modules*' \) -prune -o -type f -exec basename {} \; | while read x; do
+            echo ${x##*.}
+        done | sort | uniq -ic | sort -rn | tee /tmp/feel.out
+        echo "-----------------------------------------" | tee -a /tmp/feel.out
+        echo */ | tee -a /tmp/feel.out
+        echo "-----------------------------------------" | tee -a /tmp/feel.out
+
+        while read f; do
+            for api in ${APIS[@]};
+            do
+                c=$(grep -w -c $api $f)
+                if ((c>0)); then
+                    usecount[$api]=$((usecount[$api] + c))
+                fi
+            done
+        done < <(find $TARGET -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \))
+    else
         for api in ${APIS[@]};
         do
-            c=$(grep -w -c $api $f)
+            c=$(grep -w -c $api $TARGET)
             if ((c>0)); then
                 usecount[$api]=$((usecount[$api] + c))
             fi
         done
-    done < <(find $DIR -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \))
+    fi
+
     for api in ${!usecount[@]}
     do
-        echo "$api = ${usecount[$api]}"
-    done
+        echo "$api = ${usecount[$api]}" 
+    done | tee -a /tmp/feel.out
 }
 
 ###########

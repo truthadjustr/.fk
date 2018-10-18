@@ -136,10 +136,10 @@ xml_elcount() {
     local TMP4=$(mktemp)
     local XML=$1
     local count x
-    xml el -u $XML > $TMP0
+    xmlstarlet el -u $XML > $TMP0
     while read x;do
-        xml sel -t -v "count(//$x)" -n $XML >> $TMP2
-        xml sel -t -m "//$x/@*" -v "name()" -n $XML | sort -u > $TMP4
+        xmlstarlet sel -t -v "count(//$x)" -n $XML >> $TMP2
+        xmlstarlet sel -t -m "//$x/@*" -v "name()" -n $XML | sort -u > $TMP4
         count=$(wc -l < $TMP4)
         if ((count == 0));then
             echo >> $TMP3

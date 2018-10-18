@@ -86,7 +86,7 @@ fk_es_json_vi() {
 # A function to feel the use of certain Windows APIs
 feel () { 
     local DIR=${1:-.}
-    find $DIR -not \( -path '*.git*' -o -path '*node_modules*' \) -type f -exec basename {} \; | while read x; do
+    find $DIR \( -name '*.git*' -o -name '*node_modules*' \) -prune -o -type f -exec basename {} \; | while read x; do
         echo ${x##*.}
     done | sort | uniq -ic | sort -rn
     echo "-----------------------------------------";

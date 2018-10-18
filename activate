@@ -26,7 +26,10 @@ fk_enablef() {
     export PATH=~/.fk/shell-functools/ft:$PATH 
 }
 
-# elasticsearch 
+#####################
+# Elasticsearch stuff
+#####################
+
 fk_es_cat() {
     [ $# -eq 0 ] && return 0
     local ES=$1
@@ -65,6 +68,10 @@ fk_es_delete() {
     curl -s -XDELETE "http://$ES:9200/$INDEX"
 }
 
+############
+# JSON stuff
+############
+
 fk_es_json_vi() {
     [ $# -eq 0 ] && return 1
     local auto=0
@@ -82,6 +89,10 @@ fk_es_json_vi() {
         fi
     done
 }
+
+#############
+# C/C++ stuff
+#############
 
 # A function to feel the use of certain Windows APIs
 feel () { 
@@ -108,4 +119,62 @@ feel () {
     do
         echo "$api = ${usecount[$api]}"
     done
+}
+
+###########
+# xml stuff
+###########
+
+# XML rough analyses: count how many elements and the
+# attributes count of each element
+xml_elcount() {
+    [ $# -eq 0 ] && return 1
+
+    local TMP0=$(mktemp)
+    local TMP2=$(mktemp)
+    local TMP3=$(mktemp)
+    local TMP4=$(mktemp)
+    local XML=$1
+    local count x
+    xml el -u $XML > $TMP0
+    while read x;do
+        xml sel -t -v "count(//$x)" -n $XML >> $TMP2
+        xml sel -t -m "//$x/@*" -v "name()" -n $XML | sort -u > $TMP4
+        count=$(wc -l < $TMP4)
+        if ((count == 0));then
+            echo >> $TMP3
+        else
+            if ((count <= 10));then
+                attrs=$(tr '\n' ',' < $TMP4) 
+                echo "@:$count:${attrs%?}" >> $TMP3
+            else
+                echo "@:$count:*" >> $TMP3
+            fi
+        fi
+    done < $TMP0
+
+    paste $TMP0 $TMP2 $TMP3 | column -s $'\t' -t
+    rm -f $TMP0 $TMP2 $TMP3 $TMP4
+}
+
+###########
+# git stuff
+###########
+git_lsdiff () { 
+    hr=${1:-HEAD}
+    IFS=$'\r\n'
+    git diff --name-status $hr^ $hr | tee /tmp/lsdiff.lst | nl -v0
+    aa=($(cut -f2 /tmp/lsdiff.lst))
+}
+
+git_filediff () { 
+    [ $# -ne 1 ] && return 1
+    local LSDIFF=/tmp/lsdiff.lst
+    local f=$1
+    local h=$hr
+    git diff -w $h^:$f $h:$f
+}
+
+git_log () { 
+    git log --pretty=format:"%h%x09%ad%x09%an%x09%s" --date=format:'%Y-%m-%d %H:%M:%S' | tee /tmp/git.log | less
 }

@@ -9,7 +9,7 @@ fk_init() {
     [ ! -e shell-functools/ ] && \
         git clone ssh://git@github.com/truthadjustr/shell-functools.git
     cd -
-    MUSTHAVES='jq xmlstarlet'
+    MUSTHAVES='jq xmlstarlet nc'
     for x in $MUSTHAVES;do 
         if ! type $x >/dev/null 2>&1;then
             echo "missing $x"
@@ -267,3 +267,78 @@ git_log () {
     git log --pretty=format:"%h%x09%ad%x09%an%x09%s" --date=format:'%Y-%m-%d %H:%M:%S' | tee /tmp/git.log | less
 }
 
+gitlab_repo_delete () { 
+    [ $# -eq 0 ] && return 1;
+    local username=$IDENT;
+    local token=$GITLAB_TOKEN;
+    local repo_name=$1;
+    curl -H 'Content-Type: application/json' -H "Private-Token: $token" -X DELETE https://gitlab.com/api/v4/projects/$username%2F$repo_name
+}
+
+gitlab_repo_init () { 
+    [ $# -eq 0 ] && return 1;
+    local repo_name=$1;
+    local username=$IDENT;
+    local token=$GITLAB_TOKEN;
+    curl -H "Content-Type:application/json" https://gitlab.com/api/v4/projects?private_token=$token -d "{ \"name\": \"$repo_name\" }";
+    if [ $? -eq 0 ]; then
+        git init;
+        git add .;
+        git commit -m "first commit";
+        git remote add origin git@gitlab.com:${username}/${repo_name}.git;
+        git push -u origin master;
+    else
+        echo "CANNOT CREATE GITLAB REPO $repo_name";
+    fi
+}
+
+github_repo_delete () { 
+    [ $# -eq 0 ] && return 1;
+    local username=$IDENT;
+    local token=$GITHUB_DELETE_TOKEN;
+    local repo_name=$1;
+    curl -u "$username:$token" -X DELETE https://api.github.com/repos/$username/$repo_name
+}
+
+github_repo_init () { 
+    [ $# -eq 0 ] && return 1;
+    local repo_name=$1;
+    local username=$IDENT;
+    local token=$GITHUB_CREATE_TOKEN;
+    git init;
+    git add .;
+    git commit -m "first commit";
+    if curl -u "$username:$token" https://api.github.com/user/repos -d '{"name":"'$repo_name'"}'; then
+        git remote add origin https://github.com/${username}/${repo_name}.git;
+        git remote set-url origin git+ssh://git@github.com/${username}/${repo_name}.git;
+        git push origin master;
+    else
+        echo "CANNOT CREATE GITHUB REPO $repo_name";
+    fi
+}
+
+#############
+# shell stuff
+#############
+alias od='od -w32 --endian=big -t x1z'
+
+chr () { 
+    [ "$1" -lt 256 ] || return 1;
+    printf "\\$(printf '%03o' "$1")"
+}
+
+ord () { 
+    LC_CTYPE=C printf '%d' "'$1"
+}
+
+checkports () { 
+    [ $# -lt 2 ] && return;
+    local IPADDR=$1;
+    shift;
+    local PORTS="$*";
+    for p in $PORTS;
+    do
+        printf "$p ";
+        nc -w 5 -z $IPADDR $p && echo "open" || echo "close";
+    done
+}

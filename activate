@@ -199,6 +199,16 @@ searchobjdef() {
         -exec sh -c "ctags -x --c++-kinds=$TYPE --language-force=c++ {} | grep -w -n $OBJECT" \;
 }
 
+lsinclude () { 
+    if [ $# -eq 0 ];then
+        for f in *.h *.cpp; do
+            [ -r $f ] && grep -E '#[[:space:]]*include' $f
+        done | sort | uniq -ic | sort -rn
+    else
+        grep -E '#[[:space:]]*include' $1 | sort | uniq -ic | sort -rn
+    fi
+}
+
 ###########
 # xml stuff
 ###########
@@ -256,3 +266,4 @@ git_filediff () {
 git_log () { 
     git log --pretty=format:"%h%x09%ad%x09%an%x09%s" --date=format:'%Y-%m-%d %H:%M:%S' | tee /tmp/git.log | less
 }
+

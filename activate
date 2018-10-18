@@ -191,6 +191,14 @@ HEREDOC
         | sort | awk '!seen[$3]++'
 }
 
+searchobjdef() {
+    [ $# -ne 2 ] && return 1
+    local TYPE=$1
+    local OBJECT=$2
+    find . \( -name '.git' \) -prune -o -type f \( -name '*.h' -o -name '*.cpp' \) \
+        -exec sh -c "ctags -x --c++-kinds=$TYPE --language-force=c++ {} | grep -w -n $OBJECT" \;
+}
+
 ###########
 # xml stuff
 ###########

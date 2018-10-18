@@ -82,3 +82,30 @@ fk_es_json_vi() {
         fi
     done
 }
+
+# A function to feel the use of certain Windows APIs
+feel () { 
+    local DIR=${1:-.}
+    find $DIR -not \( -path '*.git*' -o -path '*node_modules*' \) -type f -exec basename {} \; | while read x; do
+        echo ${x##*.}
+    done | sort | uniq -ic | sort -rn
+    echo "-----------------------------------------";
+    echo */
+    echo "-----------------------------------------";
+    declare -A usecount
+    local APIS=($(<~/.fk/winapi.lst))
+    local api c f
+    while read f; do
+        for api in ${APIS[@]};
+        do
+            c=$(grep -w -c $api $f)
+            if ((c>0)); then
+                usecount[$api]=$((usecount[$api] + c))
+            fi
+        done
+    done < <(find $DIR -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \))
+    for api in ${!usecount[@]}
+    do
+        echo "$api = ${usecount[$api]}"
+    done
+}

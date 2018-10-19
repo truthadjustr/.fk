@@ -200,8 +200,20 @@ HEREDOC
     fi
     local F=$1
     local G=$2
-    ctags -x --c++-kinds=$G --language-force=c++ --extra=q $F \
-        | sed -n 's/ \+/ /gp' | cut -d' ' -f3,5-    
+    local tmp0=$(mktemp)
+    ctags -x --c++-kinds=$G --language-force=c++ --extra=q $F > $tmp0
+    case $G in
+        f)
+        sed -n 's/ \+/ /gp' $tmp0 | cut -d' ' -f3,5- 
+        ;;
+        *m*)
+        cat $tmp0 \
+            | awk '$2 == "member" && $1 ~/::/ { print $0} $2 != "member" {print $0}'
+        ;;
+        *)
+        cat $tmp0
+    esac
+    rm -f $tmp0
 }
 
 searchobjdef() {

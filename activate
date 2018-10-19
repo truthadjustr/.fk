@@ -229,7 +229,28 @@ HEREDOC
         ;;
         *m*|*p*)
         cat $tmp0 \
-            | awk 'BEGIN{ORS=""} $2 == "member" && $1 ~/::/ { split($0,x," ");printf "[%s@%s] ",$2,$3;for (i in x){if (i==4 || i==2 || i==3) continue;printf "%s ",x[i]};printf "\n"} $2 != "member" {split($0,x," ");printf "[%s@%s] ",$2,$3;for (i in x){if (i==4 || i==2 || i==3) continue;printf "%s ",x[i]};print "\n"}'
+            | awk '
+            BEGIN {ORS=""}
+            $2 == "member" && $1 ~/::/ {
+                split($0,x," ");
+                printf "[%s@%s] ",$2,$3;
+                for (i in x){
+                    if (i==4 || i==2 || i==3) continue;
+                    printf "%s ",x[i]
+                };
+                printf "\n"
+            }
+
+            $2 != "member" {
+                if ($2 == "prototype" && not $1 ~/::/) next;
+                split($0,x," ");
+                printf "[%s@%s] ",$2,$3;
+                for (i in x){
+                    if (i==4 || i==2 || i==3) continue;
+                    printf "%s ",x[i]
+                };
+                print "\n"
+            }'
         ;;
         *)
         cat $tmp0

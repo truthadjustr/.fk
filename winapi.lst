@@ -45,3 +45,6 @@ ReadFile
 QueryInterface
 _beginthreadex
 _tWinMain
+LoadLibrary
+GetProcAddress
+_WIN32_WCE

@@ -98,6 +98,10 @@ findexcludes=(\( -name ".git" -o \
 -name "node_modules" -o \
 -iname "stlport*" -o \
 -iname "cppunit*" -o \
+-iname "openssl" -o \
+-name "gmock" -o \
+-name "gtest" -o \
+-name "zlibsdk" -o \
 -iname "nt-vs*" -o \
 -iname "ce-x86*" -o \
 -name "ARM" -o \
@@ -237,7 +241,7 @@ searchobjdef() {
     local type=$1
     local object=$2
     find . "${findexcludes[@]}" -type f \( -name '*.h' -o -name '*.cpp' \) \
-        -exec sh -c "ctags -x --c++-kinds=$type --language-force=c++ {} | grep -w -n $object" \;
+        -exec sh -c "ctags -x --c++-kinds=$type --language-force=c++ '{}' | grep -w -n $object" \;
 }
 
 lsinclude () { 

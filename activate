@@ -208,6 +208,7 @@ HEREDOC
     local tmp1=$(mktemp)
     local count class idx
     ctags -x --c++-kinds=$G --language-force=c++ --extra=q $F > $tmp0
+    sed -i 's/ \+/ /g' $tmp0 
     case $G in
         f)
         sed -n 's/ \+/ /gp' $tmp0 | cut -d' ' -f3,5- | tee $tmp0
@@ -228,7 +229,7 @@ HEREDOC
         ;;
         *m*)
         cat $tmp0 \
-            | awk '$2 == "member" && $1 ~/::/ { print $0} $2 != "member" {print $0}'
+            | awk 'BEGIN{ORS=""} $2 == "member" && $1 ~/::/ { split($0,x," ");printf "[%s@%s] ",$2,$3;for (i in x){if (i==4 || i==2 || i==3) continue;printf "%s ",x[i]};printf "\n"} $2 != "member" {split($0,x," ");printf "[%s@%s] ",$2,$3;for (i in x){if (i==4 || i==2 || i==3) continue;printf "%s ",x[i]};print "\n"}'
         ;;
         *)
         cat $tmp0

@@ -9,7 +9,7 @@ fk_init() {
     [ ! -e shell-functools/ ] && \
         git clone ssh://git@github.com/truthadjustr/shell-functools.git
     cd -
-    musthaves='jq xmlstarlet nc'
+    musthaves='jq xmlstarlet nc ctags'
     for x in $musthaves;do 
         if ! type $x >/dev/null 2>&1;then
             echo "missing $x"

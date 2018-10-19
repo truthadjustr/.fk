@@ -103,6 +103,8 @@ findexcludes=(\( -name ".git" -o \
 -name "ARM" -o \
 -name "SHx" -o \
 -name Debug -o \
+-name tags -o \
+-name cscope.out -o \
 -name Release \
 \) -prune -o)
 #declare -p findexcludes
@@ -115,6 +117,7 @@ feel () {
     local api c f idx
     if [ -d $target ];then
         find $target "${findexcludes[@]}" -type f -exec basename {} \; | while read x; do
+            # get the file's extension, as info for the feel
             echo ${x##*.}
         done | sort | uniq -ic | sort -rn | tee /tmp/feel.out
         echo "-----------------------------------------" | tee -a /tmp/feel.out
@@ -130,7 +133,7 @@ feel () {
                     usecount[$api]=$((usecount[$api] + c))
                 fi
             done
-        done < <(find $target "${findexcludes[@]}" -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \))
+        done < <(find $target "${findexcludes[@]}" -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \) -print)
     else
         for api in ${apis[@]};
         do
@@ -163,10 +166,10 @@ crossref() {
 	local target=${1:-.}
 	local tmpFile=$(mktemp)
 	cd $target
-	find . -type f \
+	rm -f cscope.* tags
+	find . "${findexcludes[@]}" -type f -print \
         -a \( -name "*.h" -o -name "*.cpp" -o -name "*.c" -o -name "*.cc" -o -name "*.pc" \) > $tmpFile
 
-	rm -f cscope.* tags
     ctags -L $tmpFile
 	cscope -Rb -i $tmpFile
 	cd -
@@ -233,7 +236,7 @@ searchobjdef() {
     [ $# -ne 2 ] && return 1
     local type=$1
     local object=$2
-    find . \( -name '.git' \) -prune -o -type f \( -name '*.h' -o -name '*.cpp' \) \
+    find . "${findexcludes[@]}" -type f \( -name '*.h' -o -name '*.cpp' \) \
         -exec sh -c "ctags -x --c++-kinds=$type --language-force=c++ {} | grep -w -n $object" \;
 }
 

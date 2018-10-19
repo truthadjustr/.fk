@@ -227,7 +227,7 @@ HEREDOC
             echo "**********************"
         fi
         ;;
-        *m*)
+        *m*|*p*)
         cat $tmp0 \
             | awk 'BEGIN{ORS=""} $2 == "member" && $1 ~/::/ { split($0,x," ");printf "[%s@%s] ",$2,$3;for (i in x){if (i==4 || i==2 || i==3) continue;printf "%s ",x[i]};printf "\n"} $2 != "member" {split($0,x," ");printf "[%s@%s] ",$2,$3;for (i in x){if (i==4 || i==2 || i==3) continue;printf "%s ",x[i]};print "\n"}'
         ;;

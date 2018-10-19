@@ -1,7 +1,7 @@
 
 # bootstrap
-export FKLOGDIR=/tmp/fk
-mkdir -p $FKLOGDIR
+export fklogdir=/tmp/fk
+mkdir -p $fklogdir
 
 fk_init() {
     mkdir -p ~/.fk/ 
@@ -9,8 +9,8 @@ fk_init() {
     [ ! -e shell-functools/ ] && \
         git clone ssh://git@github.com/truthadjustr/shell-functools.git
     cd -
-    MUSTHAVES='jq xmlstarlet nc'
-    for x in $MUSTHAVES;do 
+    musthaves='jq xmlstarlet nc'
+    for x in $musthaves;do 
         if ! type $x >/dev/null 2>&1;then
             echo "missing $x"
         fi
@@ -32,40 +32,40 @@ fk_enablef() {
 
 fk_es_cat() {
     [ $# -eq 0 ] && return 0
-    local ES=$1
+    local es=$1
     if [ -n "$a" ];then
-python3 - <<END
+python3 - <<HEREDOC
 import os,sys
 sys.path.append(os.getenv('HOME') + '/.fk/')
 import es_funcs
-es_funcs.get_indices(host="$ES")
-END
+es_funcs.get_indices(host="$es")
+HEREDOC
     else
-        curl -s "http://$ES:9200/_cat/indices?v&pretty" | tee $FKLOGDIR/es_cat.$ES.$(date +'%H')
+        curl -s "http://$es:9200/_cat/indices?v&pretty" | tee $fklogdir/es_cat.$es.$(date +'%H')
     fi
 }
 
 fk_es_search() {
     [ $# -ne 2 ] && return 0
-    local ES=$1
-    local INDEX=$2
+    local es=$1
+    local index=$2
     if [ -n "$a" ];then
-python3 - <<END
+python3 - <<HEREDOC
 import os,sys
 sys.path.append(os.getenv('HOME') + '/.fk/')
 import es_funcs
-es_funcs.get_docs("$INDEX",host = $ES)
-END
+es_funcs.get_docs("$index",host = $es)
+HEREDOC
     else
-        curl -s "http://$ES:9200/$INDEX/_search?pretty" | tee $FKLOGDIR/es_search.$INDEX.$(date +'%H')
+        curl -s "http://$es:9200/$index/_search?pretty" | tee $fklogdir/es_search.$index.$(date +'%H')
     fi
 }
 
 fk_es_delete() {
     [ $# -ne 2 ] && return 0
-    local ES=$1
-    local INDEX=$2
-    curl -s -XDELETE "http://$ES:9200/$INDEX"
+    local es=$1
+    local index=$2
+    curl -s -XDELETE "http://$es:9200/$index"
 }
 
 ############
@@ -94,15 +94,27 @@ fk_es_json_vi() {
 # C/C++ stuff
 #############
 
+findexcludes=(\( -name ".git" -o \
+-name "node_modules" -o \
+-iname "stlport*" -o \
+-iname "cppunit*" -o \
+-iname "nt-vs*" -o \
+-iname "ce-x86*" -o \
+-name "ARM" -o \
+-name "SHx" -o \
+-name Debug -o \
+-name Release \
+\) -prune -o)
+#declare -p findexcludes
+
 # A function to feel the use of certain Windows APIs
 feel () { 
-    local TARGET=${1:-.}
+    local target=${1:-.}
     declare -A usecount
-    local APIS=($(<~/.fk/winapi.lst))
+    local apis=($(<~/.fk/winapi.lst))
     local api c f idx
-
-    if [ -d $TARGET ];then
-        find $TARGET \( -name '*.git*' -o -name '*node_modules*' \) -prune -o -type f -exec basename {} \; | while read x; do
+    if [ -d $target ];then
+        find $target "${findexcludes[@]}" -type f -exec basename {} \; | while read x; do
             echo ${x##*.}
         done | sort | uniq -ic | sort -rn | tee /tmp/feel.out
         echo "-----------------------------------------" | tee -a /tmp/feel.out
@@ -110,18 +122,19 @@ feel () {
         echo "-----------------------------------------" | tee -a /tmp/feel.out
 
         while read f; do
-            for api in ${APIS[@]};
+            [ -d $f ] && continue
+            for api in ${apis[@]};
             do
                 c=$(grep -w -c $api $f)
                 if ((c>0)); then
                     usecount[$api]=$((usecount[$api] + c))
                 fi
             done
-        done < <(find $TARGET -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \))
+        done < <(find $target "${findexcludes[@]}" -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \))
     else
-        for api in ${APIS[@]};
+        for api in ${apis[@]};
         do
-            c=$(grep -w -c $api $TARGET)
+            c=$(grep -w -c $api $target)
             if ((c>0)); then
                 usecount[$api]=$((usecount[$api] + c))
             fi
@@ -147,9 +160,9 @@ cpp_i() {
 }
 
 crossref() {
-	local TARGET=${1:-.}
+	local target=${1:-.}
 	local tmpFile=$(mktemp)
-	cd $TARGET
+	cd $target
 	find . -type f \
         -a \( -name "*.h" -o -name "*.cpp" -o -name "*.c" -o -name "*.cc" -o -name "*.pc" \) > $tmpFile
 
@@ -193,10 +206,10 @@ HEREDOC
 
 searchobjdef() {
     [ $# -ne 2 ] && return 1
-    local TYPE=$1
-    local OBJECT=$2
+    local type=$1
+    local object=$2
     find . \( -name '.git' \) -prune -o -type f \( -name '*.h' -o -name '*.cpp' \) \
-        -exec sh -c "ctags -x --c++-kinds=$TYPE --language-force=c++ {} | grep -w -n $OBJECT" \;
+        -exec sh -c "ctags -x --c++-kinds=$type --language-force=c++ {} | grep -w -n $object" \;
 }
 
 lsinclude () { 
@@ -218,31 +231,31 @@ lsinclude () {
 xml_elcount() {
     [ $# -eq 0 ] && return 1
 
-    local TMP0=$(mktemp)
-    local TMP2=$(mktemp)
-    local TMP3=$(mktemp)
-    local TMP4=$(mktemp)
-    local XML=$1
+    local tmp0=$(mktemp)
+    local tmp2=$(mktemp)
+    local tmp3=$(mktemp)
+    local tmp4=$(mktemp)
+    local xml=$1
     local count x
-    xmlstarlet el -u $XML > $TMP0
+    xmlstarlet el -u $xml > $tmp0
     while read x;do
-        xmlstarlet sel -t -v "count(//$x)" -n $XML >> $TMP2
-        xmlstarlet sel -t -m "//$x/@*" -v "name()" -n $XML | sort -u > $TMP4
-        count=$(wc -l < $TMP4)
+        xmlstarlet sel -t -v "count(//$x)" -n $xml >> $tmp2
+        xmlstarlet sel -t -m "//$x/@*" -v "name()" -n $xml | sort -u > $tmp4
+        count=$(wc -l < $tmp4)
         if ((count == 0));then
-            echo >> $TMP3
+            echo >> $tmp3
         else
             if ((count <= 10));then
-                attrs=$(tr '\n' ',' < $TMP4) 
-                echo "@:$count:${attrs%?}" >> $TMP3
+                attrs=$(tr '\n' ',' < $tmp4) 
+                echo "@:$count:${attrs%?}" >> $tmp3
             else
-                echo "@:$count:*" >> $TMP3
+                echo "@:$count:*" >> $tmp3
             fi
         fi
-    done < $TMP0
+    done < $tmp0
 
-    paste $TMP0 $TMP2 $TMP3 | column -s $'\t' -t
-    rm -f $TMP0 $TMP2 $TMP3 $TMP4
+    paste $tmp0 $tmp2 $tmp3 | column -s $'\t' -t
+    rm -f $tmp0 $tmp2 $tmp3 $tmp4
 }
 
 ###########
@@ -257,7 +270,7 @@ git_lsdiff () {
 
 git_filediff () { 
     [ $# -ne 1 ] && return 1
-    local LSDIFF=/tmp/lsdiff.lst
+    local lsdiff=/tmp/lsdiff.lst
     local f=$1
     local h=$hr
     git diff -w $h^:$f $h:$f
@@ -269,8 +282,8 @@ git_log () {
 
 gitlab_repo_delete () { 
     [ $# -eq 0 ] && return 1;
-    local username=$IDENT;
-    local token=$GITLAB_TOKEN;
+    local username=$ident;
+    local token=$gitlab_token;
     local repo_name=$1;
     curl -H 'Content-Type: application/json' -H "Private-Token: $token" -X DELETE https://gitlab.com/api/v4/projects/$username%2F$repo_name
 }
@@ -278,8 +291,8 @@ gitlab_repo_delete () {
 gitlab_repo_init () { 
     [ $# -eq 0 ] && return 1;
     local repo_name=$1;
-    local username=$IDENT;
-    local token=$GITLAB_TOKEN;
+    local username=$ident;
+    local token=$gitlab_token;
     curl -H "Content-Type:application/json" https://gitlab.com/api/v4/projects?private_token=$token -d "{ \"name\": \"$repo_name\" }";
     if [ $? -eq 0 ]; then
         git init;
@@ -294,8 +307,8 @@ gitlab_repo_init () {
 
 github_repo_delete () { 
     [ $# -eq 0 ] && return 1;
-    local username=$IDENT;
-    local token=$GITHUB_DELETE_TOKEN;
+    local username=$ident;
+    local token=$github_delete_token;
     local repo_name=$1;
     curl -u "$username:$token" -X DELETE https://api.github.com/repos/$username/$repo_name
 }
@@ -303,8 +316,8 @@ github_repo_delete () {
 github_repo_init () { 
     [ $# -eq 0 ] && return 1;
     local repo_name=$1;
-    local username=$IDENT;
-    local token=$GITHUB_CREATE_TOKEN;
+    local username=$ident;
+    local token=$github_create_token;
     git init;
     git add .;
     git commit -m "first commit";
@@ -333,12 +346,12 @@ ord () {
 
 checkports () { 
     [ $# -lt 2 ] && return;
-    local IPADDR=$1;
+    local ipaddr=$1;
     shift;
-    local PORTS="$*";
-    for p in $PORTS;
+    local ports="$*";
+    for p in $ports;
     do
         printf "$p ";
-        nc -w 5 -z $IPADDR $p && echo "open" || echo "close";
+        nc -w 5 -z $ipaddr $p && echo "open" || echo "close";
     done
 }

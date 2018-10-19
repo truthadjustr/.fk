@@ -167,10 +167,7 @@ crossref() {
         -a \( -name "*.h" -o -name "*.cpp" -o -name "*.c" -o -name "*.cc" -o -name "*.pc" \) > $tmpFile
 
 	rm -f cscope.* tags
-	ctags -I "__THROW __nonnull __attribute_pure__ __attribute__ G_GNUC_PRINTF+" \
-        --file-scope=yes --c++-kinds=+px --c-kinds=+px --fields=+iaS -Ra --extra=+fq \
-        --langmap=c:.c.h.pc.ec --languages=c,c++ --links=yes -f tags -L $tmpFile
-
+    ctags -L $tmpFile
 	cscope -Rb -i $tmpFile
 	cd -
 	rm -f $tmpFile

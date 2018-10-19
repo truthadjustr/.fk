@@ -201,7 +201,7 @@ HEREDOC
     local F=$1
     local G=$2
     ctags -x --c++-kinds=$G --language-force=c++ --extra=q $F \
-        sed -n 's/ \+/ /gp' | cut -d' ' -f3,5-    
+        | sed -n 's/ \+/ /gp' | cut -d' ' -f3,5-    
 }
 
 searchobjdef() {

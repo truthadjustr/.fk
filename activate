@@ -201,10 +201,20 @@ HEREDOC
     local F=$1
     local G=$2
     local tmp0=$(mktemp)
+    local tmp1=$(mktemp)
+    local count class idx
     ctags -x --c++-kinds=$G --language-force=c++ --extra=q $F > $tmp0
     case $G in
         f)
-        sed -n 's/ \+/ /gp' $tmp0 | cut -d' ' -f3,5- 
+        sed -n 's/ \+/ /gp' $tmp0 | cut -d' ' -f3,5- | tee $tmp0
+        echo "-----------------------------------------------------------------"
+        tr ' ' '\n' < $tmp0 | grep '::' | cut -d':' -f1 | sort -u > $tmp1
+        local classes=($(<$tmp1))
+        for idx in ${!classes[@]};do
+            class=${classes[idx]} 
+            count=$(grep -w $class $tmp1 | wc -l)
+            echo "$class::$count"
+        done
         ;;
         *m*)
         cat $tmp0 \
@@ -213,7 +223,7 @@ HEREDOC
         *)
         cat $tmp0
     esac
-    rm -f $tmp0
+    rm -f $tmp0 $tmp1
 }
 
 searchobjdef() {

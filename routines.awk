@@ -1,10 +1,16 @@
 function print_ctagsline(spacegap,len) {
-    printf "[%s@%d] %s ",spacegap[2],spacegap[3],spacegap[1]
+    printf "[%s_@_%d] %s ",spacegap[2],spacegap[3],spacegap[1]
     # skip printing filename at index 4
-    for (i=5;i<len;i++) {
+    for (i=5;i<=len;i++) {
         printf "%s ",spacegap[i]
     }
     printf "\n"
+}
+
+function print_ctagsline2(line) {
+    gsub(/\s+/," ",line)
+   	len = split(line,spacegap," ")
+		print_ctagsline(spacegap,len)
 }
 
 function basename(file) {

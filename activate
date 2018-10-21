@@ -162,9 +162,9 @@ feel () {
 
 cpp_i() {
     [ $# -eq 0 ] && return 1
-    local F=$1
-    #ctags -x --c++-kinds=f --language-force=c++ $F
-    grep -n -o -E '[[:alpha:]]+[[:alnum:]]*[[:space:]]*::[[:space:]]*[[:alpha:]]+[[:alnum:]]*[[:space:]]*\(' $F
+    local ifile=$1
+    #ctags -x --c++-kinds=f --language-force=c++ $ifile
+    grep -n -o -E '[[:alpha:]]+[[:alnum:]]*[[:space:]]*::[[:space:]]*[[:alpha:]]+[[:alnum:]]*[[:space:]]*\(' $ifile
 }
 
 crossref() {
@@ -181,88 +181,40 @@ crossref() {
 	rm -f $tmpFile
 }
 
-see() {
+query() {
     if [ $# -ne 2 ];then
-        echo "see file.cpp c|d|e|f|g|l|m|n|p|s|t|u|v|x"
+        echo "query file.cpp c|d|e|f|g|l|m|n|p|s|t|u|v|x"
 		echo "where:"
 		cat<<HEREDOC	
-c  classes
-d  macro definitions
-e  enumerators (values inside an enumeration)
-f  function definitions
-g  enumeration names
-l  local variables [off]
-m  class, struct, and union members
-n  namespaces
-p  function prototypes [off]
-s  structure names
-t  typedefs
-u  union names
-v  variable definitions
-x external and forward variable declarations [off]
+###########
+# Where \$2:
+# c  classes --------------------------------------------> class
+# d  macro definitions ----------------------------------> macro
+# e  enumerators (values inside an enumeration) ---------> enumerator
+# f  function definitions -------------------------------> function
+# g  enumeration names ----------------------------------> enum
+# l  local variables [off] ------------------------------> local
+# m  class, struct, and union members -------------------> member
+# n  namespaces -----------------------------------------> namespace
+# p  function prototypes [off] --------------------------> prototype
+# s  structure names ------------------------------------> struct
+# t  typedefs -------------------------------------------> typedef
+# u  union names ----------------------------------------> union
+# v  variable definitions -------------------------------> variable
+# x external and forward variable declarations [off] ----> externvar
 HEREDOC
         return 0
     fi
-    local F=$1
-    local G=$2
-    local tmp0=$(mktemp)
-    local tmp1=$(mktemp)
-    local count class idx
-    ctags -x --c++-kinds=$G --language-force=c++ --extra=q $F > $tmp0
-    sed -i 's/ \+/ /g' $tmp0 
-
-    case $G in
-        f)
-        sed -n 's/ \+/ /gp' $tmp0 | cut -d' ' -f3,5- | tee $tmp0
-        echo "-----------------------------------------------------------------"
-        tr ' ' '\n' < $tmp0 | grep '::' | cut -d':' -f1 > $tmp1
-
-        local classes=($(sort -u $tmp1))
-        for idx in ${!classes[@]};do
-            class=${classes[idx]} 
-            count=$(grep -w $class $tmp1 | wc -l)
-            echo "$class::$count"
-        done
-
-        local wce=$(grep -w _WIN32_WCE $F | wc -l)
-        if((wce > 0));then
-            echo "**********************"
-            echo "*** _WIN32_WCE = $wce ***"
-            echo "**********************"
-        fi
-        ;;
-
-        *m*|*p*)
-        cat $tmp0 \
-            | awk '
-            BEGIN {ORS=""}
-            $2 == "member" && $1 ~/::/ {
-                split($0,x," ");
-                printf "[%s@%s] ",$2,$3;
-                for (i in x){
-                    if (i==4 || i==2 || i==3) continue;
-                    printf "%s ",x[i]
-                };
-                printf "\n"
-            }
-
-            $2 != "member" {
-                if ($2 == "prototype" && not $1 ~/::/) next;
-                split($0,x," ");
-                printf "[%s@%s] ",$2,$3;
-                for (i in x){
-                    if (i==4 || i==2 || i==3) continue;
-                    printf "%s ",x[i]
-                };
-                print "\n"
-            }'
-        ;;
-
-        *)
-        cat $tmp0
-    esac
-
-    rm -f $tmp0 $tmp1 
+    local ifile=$1
+    local flags=$2
+    
+    ctags -x --c++-kinds=$flags --language-force=c++ --extra=q $ifile | ~/.fk/ctags.awk 
+    local wce=$(grep -w _WIN32_WCE $ifile | wc -l)
+    if((wce > 0));then
+        echo "**********************"
+        echo "*** _WIN32_WCE = $wce ***"
+        echo "**********************"
+    fi
 }
 
 searchobjdef() {

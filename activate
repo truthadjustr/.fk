@@ -172,8 +172,8 @@ crossref() {
 	local tmpFile=$(mktemp)
 	cd $target
 	rm -f cscope.* tags
-	find . "${findexcludes[@]}" -type f -print \
-        -a \( -name "*.h" -o -name "*.cpp" -o -name "*.c" -o -name "*.cc" -o -name "*.pc" \) > $tmpFile
+	find . "${findexcludes[@]}" -type f \
+        \( -name "*.h" -o -name "*.cpp" -o -name "*.c" \) > $tmpFile
 
     ctags -L $tmpFile
 	cscope -Rb -i $tmpFile
@@ -218,11 +218,15 @@ HEREDOC
 }
 
 searchobjdef() {
-    [ $# -ne 2 ] && return 1
+    [ $# -lt 2 ] && return 1
+    local searchdir=${3:-.}
     local type=$1
     local object=$2
-    find . "${findexcludes[@]}" -type f \( -name '*.h' -o -name '*.cpp' \) \
-        -exec sh -c "ctags -x --c++-kinds=$type --language-force=c++ '{}' | grep -w -n $object" \;
+    find $searchdir "${findexcludes[@]}" -type f \( -name '*.h' -o -name '*.cpp' \) \
+        -exec sh -c "ctags -x --c++-kinds=$type --language-force=c++ '{}' \
+        | grep -w $object \
+        | sed 's/ \+/ /g' \
+        | cut -d' ' -f1-4" \;
 }
 
 lsinclude () { 
@@ -347,6 +351,12 @@ github_repo_init () {
 # shell stuff
 #############
 alias od='od -w32 --endian=big -t x1z'
+
+maxf() {
+    [ $# -eq 0 ] && return 1
+    local ifile=$1
+    awk '{if(NF>max){max=NF;t=$1}} END{print max,t}' $ifile
+}
 
 chr () { 
     [ "$1" -lt 256 ] || return 1;

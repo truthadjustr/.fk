@@ -235,7 +235,7 @@ lsinclude () {
             [ -r $f ] && grep -E '#[[:space:]]*include' $f
         done | sort | uniq -ic | sort -rn
     else
-        grep -E '#[[:space:]]*include' $1 | sort | uniq -ic | sort -rn
+        grep -R -E '#[[:space:]]*include' $1 | sort | uniq -ic | sort -rn
     fi
 }
 

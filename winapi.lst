@@ -48,3 +48,4 @@ _tWinMain
 LoadLibrary
 GetProcAddress
 _WIN32_WCE
+_ATL_APARTMENT_THREADED

@@ -224,9 +224,7 @@ searchobjdef() {
     local object=$2
     find $searchdir "${findexcludes[@]}" -type f \( -name '*.h' -o -name '*.cpp' \) \
         -exec sh -c "ctags -x --c++-kinds=$type --language-force=c++ '{}' \
-        | sed 's/ \+/ /g' \
-        | awk -v k=$object '\$1==k{ print \$0 }' \
-        | cut -d' ' -f1-4" \;
+        | sed 's/ \+/ /g' | grep -w -E \"$object([[:space:]]|,|:)\"" \;
 }
 
 lsinclude () { 

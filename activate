@@ -347,6 +347,31 @@ github_repo_init () {
     fi
 }
 
+gitmerge_lsdiff() {
+    local tmp0=$(mktemp)
+    git log --pretty=format:"%h" > $tmp0
+    local headhash=$(sed -n 1p $tmp0)
+    hr1=${1:-$headhash}
+    hr0=$(git log --pretty=format:"%h" | sed -n "/${hr1}/{h;n;p}")
+    if [ -n "$hr0" ]; then
+        git diff --name-status $hr0..$hr1 | nl -v0 | tee /tmp/lastdiff | less
+    else
+        echo "There is no previous of $hr1"
+    fi
+    aaa=($(cut -f3 /tmp/lastdiff))
+    rm -f $tmp0
+}
+
+gitmerge_filediff() {
+    [ $# -ne 1 ] && return 1
+    if [ -z "$hr0" ] || [ -z "$hr1" ];then
+        echo "no reference commit hash"
+        return 2
+    fi
+    local f=$1
+    git diff -w $hr0..$hr1 $f
+}
+
 #############
 # shell stuff
 #############

@@ -13,13 +13,12 @@ ofile=${3:-/dev/stdout}
 # to creep-in into your script!
 # line="$line "$c
 
-tokens=($(ctags -x --c++-kinds=$flags --language-force=c++ --extra=q "$ifile" \
-    | ~/.fk/ctags.awk -v a=1)) #                                        ^
+tokens=$(ctags -x --c++-kinds=$flags --language-force=c++ --extra=q "$ifile" \
+    | ~/.fk/ctags.awk)         #                                        ^
                                # Quote to deal with path having spaces _|
-if((${#tokens[@]} > 0));then
-    # got some weird extra 0x20 hex with printf
-    #printf "%s %s " $ifile ${tokens[@]} >> $ofile
-    #printf "\n" >> $ofile
-    echo "$ifile ${tokens[@]}" >> $ofile
+if [ -n "$tokens" ];then
+    echo "$ifile:" >> $ofile
+    echo "$tokens" >> $ofile
+    echo >> $ofile
 fi
 

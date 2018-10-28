@@ -51,3 +51,4 @@ _WIN32_WCE
 _ATL_APARTMENT_THREADED
 CoCreateInstance
 IUnknown
+_tmain

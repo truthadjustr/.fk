@@ -95,7 +95,7 @@ fk_es_json_vi() {
 # C/C++ stuff
 #############
 
-findexcludes=(\( -name ".git" -o \
+fiex=(\( -name ".git" -o \
 -name "node_modules" -o \
 -iname "stlport*" -o \
 -iname "cppunit*" -o \
@@ -112,7 +112,7 @@ findexcludes=(\( -name ".git" -o \
 -name cscope.out -o \
 -name Release \
 \) -prune -o)
-#declare -p findexcludes
+#declare -p fiex
 
 # A function to feel the use of certain Windows APIs
 feel () { 
@@ -121,12 +121,12 @@ feel () {
     local apis=($(<~/.fk/winapi.lst))
     local api c f idx
     if [ -d $target ];then
-        find $target "${findexcludes[@]}" -type f -exec basename {} \; | while read x; do
+        find $target "${fiex[@]}" -type f -exec basename {} \; | while read x; do
             # get the file's extension, as info for the feel
             echo ${x##*.}
         done | sort | uniq -ic | sort -rn | tee /tmp/feel.out
         echo "-----------------------------------------" | tee -a /tmp/feel.out
-        echo */ | tee -a /tmp/feel.out
+        echo $target/*/ | tee -a /tmp/feel.out
         echo "-----------------------------------------" | tee -a /tmp/feel.out
 
         while read f; do
@@ -138,7 +138,7 @@ feel () {
                     usecount[$api]=$((usecount[$api] + c))
                 fi
             done
-        done < <(find $target "${findexcludes[@]}" -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \) -print)
+        done < <(find $target "${fiex[@]}" -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \) -print)
     else
         for api in ${apis[@]};
         do
@@ -172,7 +172,7 @@ crossref() {
 	local tmpFile=$(mktemp)
 	cd $target
 	rm -f cscope.* tags
-	find . "${findexcludes[@]}" -type f \
+	find . $2 "${fiex[@]}" -type f -print \
         \( -name "*.h" -o -name "*.cpp" -o -name "*.c" \) > $tmpFile
 
     ctags -L $tmpFile
@@ -222,7 +222,7 @@ searchobjdef() {
     local searchdir=${3:-.}
     local type=$1
     local object=$2
-    find $searchdir "${findexcludes[@]}" -type f \( -name '*.h' -o -name '*.cpp' \) \
+    find $searchdir "${fiex[@]}" -type f \( -name '*.h' -o -name '*.cpp' \) \
         -exec sh -c "ctags -x --c++-kinds=$type --language-force=c++ '{}' \
         | sed 's/ \+/ /g' | grep -w $object" \;
 }
@@ -240,6 +240,8 @@ lsinclude () {
 ###########
 # xml stuff
 ###########
+
+alias xmlms='xmlstarlet sel -N x="http://schemas.microsoft.com/developer/msbuild/2003"'
 
 # XML rough analyses: count how many elements and the
 # attributes count of each element

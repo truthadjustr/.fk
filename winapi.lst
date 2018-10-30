@@ -20,6 +20,7 @@ bind
 connect
 MapViewOfFile
 UnmapViewOfFile
+send
 recv
 OpenProcess
 RegOpenKeyEx

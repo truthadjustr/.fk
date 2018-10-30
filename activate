@@ -181,6 +181,16 @@ crossref() {
 	rm -f $tmpFile
 }
 
+tagf() {
+    local flags=fcmdsx
+    if [ $# -eq 0 ];then
+        find . -maxdepth 1 ${fiex[@]} -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \) \
+            -exec ctags --append=yes --c++-kinds=$flags --language-force=c++ --extra=q {} \;
+    else
+        ctags --append=yes --c++-kinds=$flags --language-force=c++ --extra=q $*
+    fi
+}
+
 query() {
     if [ $# -ne 2 ];then
         echo "query file.cpp c|d|e|f|g|l|m|n|p|s|t|u|v|x"

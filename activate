@@ -168,24 +168,25 @@ cpp_i() {
 }
 
 crossref() {
-	local target=${1:-.}
+	#local target=${1:-.}
 	local tmpFile=$(mktemp)
-	cd $target
+	#cd $target
 	rm -f cscope.* tags
-	find . $2 "${fiex[@]}" -type f -print \
+	find $* "${fiex[@]}" -type f -print \
         \( -name "*.h" -o -name "*.cpp" -o -name "*.c" \) > $tmpFile
 
     ctags -L $tmpFile
-	cscope -Rb -i $tmpFile
-	cd -
+	#cscope -Rb -i $tmpFile
+	#cd -
 	rm -f $tmpFile
 }
 
 tagf() {
-    local flags=fcmdsx
+    local flags=fxcmds
     if [ $# -eq 0 ];then
-        find . -maxdepth 1 ${fiex[@]} -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \) \
-            -exec ctags --append=yes --c++-kinds=$flags --language-force=c++ --extra=q {} \;
+        rm -f tags
+        find . -maxdepth 1 "${fiex[@]}" -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \) \
+            -exec ctags --append=yes --c++-kinds=$flags --language-force=c++ {} \;
     else
         ctags --append=yes --c++-kinds=$flags --language-force=c++ --extra=q $*
     fi

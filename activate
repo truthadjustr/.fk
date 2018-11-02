@@ -182,13 +182,13 @@ crossref() {
 }
 
 tagf() {
-    local flags=fxcmds
+    local flags=fpvxcmds
     if [ $# -eq 0 ];then
         rm -f tags
         find . -maxdepth 1 "${fiex[@]}" -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \) \
-            -exec ctags --append=yes --c++-kinds=$flags --language-force=c++ {} \;
+            -exec ctags --append=yes --c++-kinds=$flags --language-force=c++ --fields=+iaS --extra=+q {} \;
     else
-        ctags --append=yes --c++-kinds=$flags --language-force=c++ --extra=q $*
+        ctags --append=yes --c++-kinds=$flags --language-force=c++ --extra=+q --fields=+iaS $*
     fi
 }
 
@@ -412,5 +412,46 @@ checkports () {
     do
         printf "$p ";
         nc -w 5 -z $ipaddr $p && echo "open" || echo "close";
+    done
+}
+
+syncheck() {
+    declare -A fileMap
+    inotifywait --exclude .swp --format '%w%f' -e modify,create -m -r -q $* | \
+    while read FILE; do   
+        es=$(date +'%s')
+        case "$FILE" in
+        *.hs)
+        if [[ ${fileMap[$FILE]} != $es ]];then
+            fileMap[$FILE]=$es
+            ghc -fno-code $FILE
+            echo "---------------------------------------------"
+        fi
+        ;;
+
+        *.cpp)
+        if [[ ${fileMap[$FILE]} != $es ]];then
+            fileMap[$FILE]=$es
+            g++ -c $FILE
+            echo "---------------------------------------------"
+        fi
+        ;;
+
+        *.c)
+        if [[ ${fileMap[$FILE]} != $es ]];then
+            fileMap[$FILE]=$es
+            gcc -c $FILE
+            echo "---------------------------------------------"
+        fi
+        ;;
+
+        *.py)
+        if [[ ${fileMap[$FILE]} != $es ]];then
+            fileMap[$FILE]=$es
+            python3 -m py_compile $FILE
+            echo "---------------------------------------------"
+        fi
+        ;;
+        esac
     done
 }

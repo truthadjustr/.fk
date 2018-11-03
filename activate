@@ -419,37 +419,46 @@ syncheck() {
     declare -A fileMap
     inotifywait --exclude .swp --format '%w%f' -e modify,create -m -r -q $* | \
     while read FILE; do   
+        #es=$(date +'%s.%N')
         es=$(date +'%s')
         case "$FILE" in
         *.hs)
         if [[ ${fileMap[$FILE]} != $es ]];then
+            sdiff=$(($es-${fileMap[$FILE]:-0}))
             fileMap[$FILE]=$es
+            ((sdiff < 3)) && continue
             ghc -fno-code $FILE
-            echo "---------------------------------------------"
+            echo "--------------------[$FILE $?]--------------------------"
         fi
         ;;
 
         *.cpp)
         if [[ ${fileMap[$FILE]} != $es ]];then
+            sdiff=$(($es-${fileMap[$FILE]:-0}))
             fileMap[$FILE]=$es
+            ((sdiff < 3)) && continue
             g++ -c $FILE
-            echo "---------------------------------------------"
+            echo "--------------------[$FILE $?]--------------------------"
         fi
         ;;
 
         *.c)
         if [[ ${fileMap[$FILE]} != $es ]];then
+            sdiff=$(($es-${fileMap[$FILE]:-0}))
             fileMap[$FILE]=$es
+            ((sdiff < 3)) && continue
             gcc -c $FILE
-            echo "---------------------------------------------"
+            echo "--------------------[$FILE $?]--------------------------"
         fi
         ;;
 
         *.py)
         if [[ ${fileMap[$FILE]} != $es ]];then
+            sdiff=$(($es-${fileMap[$FILE]:-0}))
             fileMap[$FILE]=$es
+            ((sdiff < 3)) && continue
             python3 -m py_compile $FILE
-            echo "---------------------------------------------"
+            echo "--------------------[$FILE $?]--------------------------"
         fi
         ;;
         esac

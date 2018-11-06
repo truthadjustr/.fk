@@ -182,10 +182,10 @@ crossref() {
 }
 
 tagf() {
-    local flags=fpvxcmds
+    local flags=fpvxcmdst
     if [ $# -eq 0 ];then
         rm -f tags
-        find . -maxdepth 1 "${fiex[@]}" -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \) \
+        find . "${fiex[@]}" -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c' \) \
             -exec ctags --append=yes --c++-kinds=$flags --language-force=c++ --fields=+iaS --extra=+q {} \;
     else
         ctags --append=yes --c++-kinds=$flags --language-force=c++ --extra=+q --fields=+iaS $*

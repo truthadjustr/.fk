@@ -1,6 +1,13 @@
 from elasticsearch import Elasticsearch
 import json,time,requests,os
 
+#es = Elasticsearch (
+#        [esurl],
+#        http_auth = (esuser,espass),
+#        scheme = "https",
+#        port = port,
+#    )
+
 def get_indices(host='elastic-local-node'):
     fklogdir = os.getenv('FKLOGDIR')
     indexf = fklogdir + '/esresults/indices'
@@ -10,6 +17,7 @@ def get_indices(host='elastic-local-node'):
     #for index in es.indices.get('*')
     #    print(index)
 
+	# this HTTP WGET credentialling works here
     res = requests.get("http://elastic-local-node:9200/_cat/indices?v&h=index,docs.count&s=docs.count:desc")
     if res.headers['content-type'] == 'text/plain; charset=UTF-8':
         indices_ = filter(lambda x: not x.startswith('.') ,res.text.split('\n'))
@@ -35,6 +43,7 @@ def get_docs(indexname,host='elastic-local-node'):
         }
     }
 
+	# this requires correct way to pass credentials
     es = Elasticsearch(host=host)
     result = es.search(index=indexname,body={'query':{'match_all':{}}},size=0)
     total = result['hits']['total']

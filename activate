@@ -290,22 +290,27 @@ xml_elcount() {
 # git stuff
 ###########
 git_lsdiff () { 
+    # We use persisted environment variable $aa and $hr between
+    # git_lsdiff and git_filediff
     hr=${1:-HEAD}
     IFS=$'\r\n'
-    git diff --name-status $hr^ $hr | tee /tmp/lsdiff.lst | nl -v0
-    aa=($(cut -f2 /tmp/lsdiff.lst))
+    git diff --name-status $hr^ $hr | tee /tmp/lsdiff.$hr | nl -v0
+    aa=($(cut -f2 /tmp/lsdiff.$hr))
 }
 
 git_filediff () { 
+    # Run git_lsdiff first. Then this one:
+    # git_filediff ${aa[0]}
     [ $# -ne 1 ] && return 1
-    local lsdiff=/tmp/lsdiff.lst
+    local lsdiff=/tmp/lsdiff.$hr
     local f=$1
     local h=$hr
     git diff -w $h^:$f $h:$f
 }
 
 git_log () { 
-    git log --pretty=format:"%h%x09%ad%x09%an%x09%s" --date=format:'%Y-%m-%d %H:%M:%S' | tee /tmp/git.log | less
+    local output=$(git remote -v | grep fetch | awk '{print $2}' | tr '/' '\n'|tail -2|tr '\n' '-')
+    git log --pretty=format:"%h%x09%ad%x09%an%x09%s" --date=format:'%Y-%m-%d %H:%M:%S' | tee /tmp/$output
 }
 
 gitlab_repo_delete () { 

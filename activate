@@ -309,8 +309,10 @@ git_filediff () {
 }
 
 git_log () { 
-    local output=$(git remote -v | grep fetch | awk '{print $2}' | tr '/' '\n'|tail -2|tr '\n' '-')
+    local bra=$(git branch | grep \* | cut -d ' ' -f2)
+    local output=$(git remote -v | grep fetch | awk '{print $2}' | tr '/' '\n'|tail -2|tr '\n' '-')$bra.gitlog
     git log --pretty=format:"%h%x09%ad%x09%an%x09%s" --date=format:'%Y-%m-%d %H:%M:%S' | tee /tmp/$output
+    echo
 }
 
 gitlab_repo_delete () { 
